@@ -11,15 +11,23 @@
   <!-- ===== Hero: タスク(左) / 残り日数(中央・主役) / スケジュール(右) — 最初の1画面はこれだけ ===== -->
   <div class="min-h-screen flex flex-col justify-center max-w-6xl mx-auto px-10">
 
-    <p class="text-zinc-500 text-sm tracking-[0.3em] uppercase mb-8 text-center">卒業まで</p>
+    <p class="text-zinc-500 text-sm tracking-[0.3em] uppercase mb-4 text-center">卒業まで</p>
 
-    <div class="grid grid-cols-[1fr_auto_1fr] items-center gap-8">
+    <!-- 学年セレクタ: 今何年生かを選ぶと期限が再計算される -->
+    <div id="grade-selector" class="flex justify-center gap-2 mb-8">
+      <button type="button" data-grade="1" class="grade-btn px-4 py-1.5 text-sm border rounded border-zinc-800 text-zinc-500">1年</button>
+      <button type="button" data-grade="2" class="grade-btn px-4 py-1.5 text-sm border rounded border-zinc-800 text-zinc-500">2年</button>
+      <button type="button" data-grade="3" class="grade-btn px-4 py-1.5 text-sm border rounded border-zinc-800 text-zinc-500">3年</button>
+      <button type="button" data-grade="4" class="grade-btn px-4 py-1.5 text-sm border rounded border-zinc-800 text-zinc-500">4年</button>
+    </div>
+
+    <div class="grid grid-cols-[1fr_34rem_1fr] items-center gap-8">
       <!-- タスク: 空枠のみ（おまけ） -->
       <div class="h-96 border border-dashed border-zinc-800 rounded flex items-center justify-center">
         <span class="text-zinc-700 text-sm">タスク（準備中）</span>
       </div>
 
-      <!-- 残り日数: 主役 -->
+      <!-- 残り日数: 主役（桁数が変わっても幅が動かないよう固定幅カラムの中で中央揃え） -->
       <div class="flex flex-col items-center px-6">
         <div class="flex items-baseline gap-4">
           <span id="remaining-days" class="text-[13rem] leading-none font-bold text-orange-500 tabular-nums">612</span>
@@ -43,7 +51,7 @@
 
     <!-- スクロール追従バー: 縮小版の 残り日数 / タスク / スケジュール -->
     <div class="sticky top-0 z-10 -mx-10 px-10 py-3 mb-10 bg-zinc-950/95 backdrop-blur-sm border-b border-zinc-800">
-      <div class="grid grid-cols-[1fr_auto_1fr] items-center gap-4">
+      <div class="grid grid-cols-[1fr_10rem_1fr] items-center gap-4">
         <div class="h-10 border border-dashed border-zinc-800 rounded flex items-center justify-center">
           <span class="text-zinc-700 text-xs">タスク</span>
         </div>
@@ -63,19 +71,19 @@
     <div class="grid grid-cols-4 gap-3 mb-10 text-sm">
       <div class="border border-zinc-800 rounded px-4 py-3">
         <p class="text-zinc-500 text-xs mb-1">残りの週</p>
-        <p class="text-xl text-zinc-200 tabular-nums">87</p>
+        <p id="card-remaining-weeks" class="text-xl text-zinc-200 tabular-nums">-</p>
       </div>
       <div class="border border-zinc-800 rounded px-4 py-3">
         <p class="text-zinc-500 text-xs mb-1">残りの日数</p>
-        <p class="text-xl text-zinc-200 tabular-nums">612</p>
+        <p id="card-remaining-days" class="text-xl text-zinc-200 tabular-nums">-</p>
       </div>
       <div class="border border-zinc-800 rounded px-4 py-3">
         <p class="text-zinc-500 text-xs mb-1">残りの長期休暇</p>
-        <p class="text-xl text-zinc-200 tabular-nums">4</p>
+        <p id="card-remaining-breaks" class="text-xl text-zinc-200 tabular-nums">-</p>
       </div>
       <div class="border border-zinc-800 rounded px-4 py-3">
         <p class="text-zinc-500 text-xs mb-1">経過</p>
-        <p class="text-xl text-zinc-200 tabular-nums">58%</p>
+        <p id="card-elapsed-ratio" class="text-xl text-zinc-200 tabular-nums">-</p>
       </div>
     </div>
 
@@ -100,33 +108,105 @@
   </div>
 
 <script>
-  const progress = {
-    totalWeeks: 208,
-    elapsedWeeks: 121,
-    remainingWeeks: 87,
-    remainingDays: 612,
-    remainingBreaks: 4,
-    elapsedRatio: 0.58,
-  };
+  const MS_PER_DAY = 24 * 60 * 60 * 1000;
+  const TOTAL_GRADES = 4;
 
-  document.getElementById('remaining-days').textContent = progress.remainingDays;
-  document.getElementById('remaining-days-sticky').textContent = progress.remainingDays;
-  document.getElementById('remaining-weeks').textContent = progress.remainingWeeks;
-  document.getElementById('elapsed-ratio').textContent = Math.round(progress.elapsedRatio * 100) + '%';
-
-  const gridEl = document.getElementById('week-grid');
-  for (let i = 0; i < progress.totalWeeks; i++) {
-    const cell = document.createElement('div');
-    cell.className = 'aspect-square';
-    if (i < progress.elapsedWeeks) {
-      cell.classList.add('bg-zinc-800');
-    } else if (i === progress.elapsedWeeks) {
-      cell.classList.add('bg-orange-500');
-    } else {
-      cell.classList.add('bg-orange-500/20');
-    }
-    gridEl.appendChild(cell);
+  function startOfDay(date) {
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate());
   }
+
+  // 日本の学年暦（4/1始まり）における「今の学年度が始まった年」を返す
+  function academicYearStart(date) {
+    const y = date.getFullYear();
+    const m = date.getMonth() + 1;
+    return m >= 4 ? y : y - 1;
+  }
+
+  function daysBetween(from, to) {
+    return Math.round((startOfDay(to) - startOfDay(from)) / MS_PER_DAY);
+  }
+
+  function computeProgress(grade, today) {
+    const ay = academicYearStart(today);
+    const entryDate = new Date(ay - (grade - 1), 3, 1); // 現学年度からgrade-1年遡った4/1
+    const graduationDate = new Date(ay + (TOTAL_GRADES - grade) + 1, 2, 31); // 4年目終了年の3/31
+
+    const remainingDays = Math.max(0, daysBetween(today, graduationDate));
+    const elapsedDaysTotal = Math.max(0, daysBetween(entryDate, today));
+    const totalDaysTotal = Math.max(1, daysBetween(entryDate, graduationDate));
+
+    const totalWeeks = Math.round(totalDaysTotal / 7);
+    const elapsedWeeks = Math.min(totalWeeks, Math.floor(elapsedDaysTotal / 7));
+    const remainingWeeks = Math.max(0, totalWeeks - elapsedWeeks - 1); // 「今週」を除いた残り
+    const elapsedRatio = Math.min(1, elapsedDaysTotal / totalDaysTotal);
+
+    // 残りの長期休暇（夏休み・春休み、それぞれ年2回想定）を卒業までの範囲で数える
+    let remainingBreaks = 0;
+    for (let i = 0; ay + i <= ay + (TOTAL_GRADES - grade); i++) {
+      const summerBreak = new Date(ay + i, 7, 1);
+      const springBreak = new Date(ay + i + 1, 1, 1);
+      [summerBreak, springBreak].forEach((breakDate) => {
+        if (breakDate > startOfDay(today) && breakDate <= graduationDate) {
+          remainingBreaks++;
+        }
+      });
+    }
+
+    return {
+      entryDate, graduationDate,
+      totalWeeks, elapsedWeeks, remainingWeeks,
+      remainingDays, remainingBreaks, elapsedRatio,
+    };
+  }
+
+  function renderGrid(progress) {
+    const gridEl = document.getElementById('week-grid');
+    gridEl.innerHTML = '';
+    for (let i = 0; i < progress.totalWeeks; i++) {
+      const cell = document.createElement('div');
+      cell.className = 'aspect-square';
+      if (i < progress.elapsedWeeks) {
+        cell.classList.add('bg-zinc-800');
+      } else if (i === progress.elapsedWeeks) {
+        cell.classList.add('bg-orange-500');
+      } else {
+        cell.classList.add('bg-orange-500/20');
+      }
+      gridEl.appendChild(cell);
+    }
+  }
+
+  function render(grade) {
+    const today = new Date();
+    const progress = computeProgress(grade, today);
+    const ratioPct = Math.round(progress.elapsedRatio * 100) + '%';
+
+    document.getElementById('remaining-days').textContent = progress.remainingDays;
+    document.getElementById('remaining-days-sticky').textContent = progress.remainingDays;
+    document.getElementById('remaining-weeks').textContent = progress.remainingWeeks;
+    document.getElementById('elapsed-ratio').textContent = ratioPct;
+
+    document.getElementById('card-remaining-weeks').textContent = progress.remainingWeeks;
+    document.getElementById('card-remaining-days').textContent = progress.remainingDays;
+    document.getElementById('card-remaining-breaks').textContent = progress.remainingBreaks;
+    document.getElementById('card-elapsed-ratio').textContent = ratioPct;
+
+    renderGrid(progress);
+
+    document.querySelectorAll('.grade-btn').forEach((btn) => {
+      const isActive = Number(btn.dataset.grade) === grade;
+      btn.classList.toggle('border-orange-500', isActive);
+      btn.classList.toggle('text-orange-500', isActive);
+      btn.classList.toggle('border-zinc-800', !isActive);
+      btn.classList.toggle('text-zinc-500', !isActive);
+    });
+  }
+
+  document.querySelectorAll('.grade-btn').forEach((btn) => {
+    btn.addEventListener('click', () => render(Number(btn.dataset.grade)));
+  });
+
+  render(1);
 </script>
 
 </body>
