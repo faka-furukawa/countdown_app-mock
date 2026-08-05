@@ -22,9 +22,18 @@
     </div>
 
     <div class="grid grid-cols-[1fr_34rem_1fr] items-center gap-8">
-      <!-- タスク: 空枠のみ（おまけ） -->
-      <div class="h-96 border border-dashed border-zinc-800 rounded flex items-center justify-center">
-        <span class="text-zinc-700 text-sm">タスク（準備中）</span>
+      <!-- タスク: 追加・完了トグルが可能（保存はされずリロードで初期状態に戻る） -->
+      <div class="h-96 border border-zinc-800 rounded p-4 flex flex-col">
+        <div class="flex items-baseline justify-between mb-3">
+          <span class="text-zinc-400 text-sm">タスク</span>
+          <span id="task-count" class="text-zinc-600 text-xs">-</span>
+        </div>
+        <ul id="task-list" class="flex-1 overflow-y-auto space-y-1 mb-3"></ul>
+        <form id="task-form" class="flex gap-2">
+          <input id="task-input" type="text" placeholder="挑戦を追加" autocomplete="off"
+            class="flex-1 min-w-0 bg-zinc-900 border border-zinc-800 rounded px-2 py-1.5 text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-zinc-600">
+          <button type="submit" class="px-3 py-1.5 text-sm border border-zinc-700 rounded text-zinc-300 hover:border-orange-500 hover:text-orange-500">追加</button>
+        </form>
       </div>
 
       <!-- 残り日数: 主役（桁数が変わっても幅が動かないよう固定幅カラムの中で中央揃え） -->
@@ -207,6 +216,44 @@
   });
 
   render(1);
+
+  // ===== タスク: 追加・完了トグル（保存なし、リロードで初期状態に戻る） =====
+  let tasks = [
+    { id: 'c1', title: 'TOEIC 800点', done: false },
+    { id: 'c2', title: '個人開発を1本公開', done: false },
+    { id: 'c3', title: '長期インターン', done: true },
+  ];
+
+  function renderTasks() {
+    const listEl = document.getElementById('task-list');
+    listEl.innerHTML = '';
+    tasks.forEach((task) => {
+      const li = document.createElement('li');
+      li.className = 'text-sm px-2 py-1.5 rounded cursor-pointer hover:bg-zinc-900 transition-colors '
+        + (task.done ? 'text-zinc-600 line-through' : 'text-zinc-200');
+      li.textContent = task.title;
+      li.addEventListener('click', () => {
+        task.done = !task.done;
+        renderTasks();
+      });
+      listEl.appendChild(li);
+    });
+
+    const doneCount = tasks.filter((t) => t.done).length;
+    document.getElementById('task-count').textContent = `${tasks.length}件中${doneCount}件達成`;
+  }
+
+  document.getElementById('task-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const input = document.getElementById('task-input');
+    const title = input.value.trim();
+    if (!title) return;
+    tasks.unshift({ id: 'c' + Date.now(), title, done: false });
+    input.value = '';
+    renderTasks();
+  });
+
+  renderTasks();
 </script>
 
 </body>
