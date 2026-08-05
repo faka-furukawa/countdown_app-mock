@@ -8,67 +8,92 @@
 </head>
 <body class="bg-zinc-950 text-zinc-200 font-mono min-h-screen">
 
-  <div class="max-w-5xl mx-auto px-10 py-14">
+  <!-- ===== Hero: タスク(左) / 残り日数(中央・主役) / スケジュール(右) — 最初の1画面はこれだけ ===== -->
+  <div class="min-h-screen flex flex-col justify-center max-w-6xl mx-auto px-10">
 
-    <!-- ===== Hero: 残り日数 + タスク(空枠) ===== -->
-    <p class="text-zinc-500 text-sm tracking-[0.3em] uppercase mb-6">卒業まで</p>
+    <p class="text-zinc-500 text-sm tracking-[0.3em] uppercase mb-8 text-center">卒業まで</p>
 
-    <div class="flex flex-row items-stretch gap-10 mb-20">
-      <!-- 残り日数 -->
-      <div class="flex-1 flex flex-col justify-center">
+    <div class="grid grid-cols-[1fr_auto_1fr] items-center gap-8">
+      <!-- タスク: 空枠のみ（おまけ） -->
+      <div class="h-96 border border-dashed border-zinc-800 rounded flex items-center justify-center">
+        <span class="text-zinc-700 text-sm">タスク（準備中）</span>
+      </div>
+
+      <!-- 残り日数: 主役 -->
+      <div class="flex flex-col items-center px-6">
         <div class="flex items-baseline gap-4">
-          <span id="remaining-days" class="text-[9rem] leading-none font-bold text-orange-500 tabular-nums">612</span>
-          <span class="text-3xl text-zinc-400">日</span>
+          <span id="remaining-days" class="text-[13rem] leading-none font-bold text-orange-500 tabular-nums">612</span>
+          <span class="text-4xl text-zinc-400">日</span>
         </div>
-        <p class="mt-5 text-zinc-500 text-lg">
+        <p class="mt-6 text-zinc-500 text-xl">
           残り<span id="remaining-weeks" class="text-zinc-300">87</span>週　／　経過<span id="elapsed-ratio" class="text-zinc-300">58%</span>
         </p>
       </div>
 
-      <!-- タスク: 空枠のみ -->
-      <div class="w-80 border border-dashed border-zinc-700 rounded flex items-center justify-center">
-        <span class="text-zinc-600 text-sm">タスク（準備中）</span>
+      <!-- スケジュール: 空枠のみ（おまけ） -->
+      <div class="h-96 border border-dashed border-zinc-800 rounded flex items-center justify-center">
+        <span class="text-zinc-700 text-sm">スケジュール（準備中）</span>
       </div>
     </div>
 
-    <!-- ===== 二次情報: 指標カード + 週グリッド（控えめ表示） ===== -->
+  </div>
+
+  <!-- ===== 二次情報: 指標カード + 週グリッド（スクロールしないと見えない・控えめ表示） ===== -->
+  <div class="max-w-6xl mx-auto px-10 pb-14">
+
+    <!-- スクロール追従バー: 縮小版の 残り日数 / タスク / スケジュール -->
+    <div class="sticky top-0 z-10 -mx-10 px-10 py-3 mb-10 bg-zinc-950/95 backdrop-blur-sm border-b border-zinc-800">
+      <div class="grid grid-cols-[1fr_auto_1fr] items-center gap-4">
+        <div class="h-10 border border-dashed border-zinc-800 rounded flex items-center justify-center">
+          <span class="text-zinc-700 text-xs">タスク</span>
+        </div>
+        <div class="flex items-baseline gap-2 justify-self-center">
+          <span id="remaining-days-sticky" class="text-3xl font-bold text-orange-500 tabular-nums leading-none">612</span>
+          <span class="text-sm text-zinc-400">日</span>
+        </div>
+        <div class="h-10 border border-dashed border-zinc-800 rounded flex items-center justify-center">
+          <span class="text-zinc-700 text-xs">スケジュール</span>
+        </div>
+      </div>
+    </div>
+
     <div class="opacity-50 hover:opacity-100 focus-within:opacity-100 transition-opacity duration-300">
 
-      <!-- 指標カード 2x2 -->
-      <div class="grid grid-cols-4 gap-3 mb-10 text-sm">
-        <div class="border border-zinc-800 rounded px-4 py-3">
-          <p class="text-zinc-500 text-xs mb-1">残りの週</p>
-          <p class="text-xl text-zinc-200 tabular-nums">87</p>
-        </div>
-        <div class="border border-zinc-800 rounded px-4 py-3">
-          <p class="text-zinc-500 text-xs mb-1">残りの日数</p>
-          <p class="text-xl text-zinc-200 tabular-nums">612</p>
-        </div>
-        <div class="border border-zinc-800 rounded px-4 py-3">
-          <p class="text-zinc-500 text-xs mb-1">残りの長期休暇</p>
-          <p class="text-xl text-zinc-200 tabular-nums">4</p>
-        </div>
-        <div class="border border-zinc-800 rounded px-4 py-3">
-          <p class="text-zinc-500 text-xs mb-1">経過</p>
-          <p class="text-xl text-zinc-200 tabular-nums">58%</p>
-        </div>
+    <!-- 指標カード 2x2 -->
+    <div class="grid grid-cols-4 gap-3 mb-10 text-sm">
+      <div class="border border-zinc-800 rounded px-4 py-3">
+        <p class="text-zinc-500 text-xs mb-1">残りの週</p>
+        <p class="text-xl text-zinc-200 tabular-nums">87</p>
       </div>
-
-      <!-- 週グリッド -->
-      <div id="week-grid" class="grid gap-1 mb-4" style="grid-template-columns: repeat(26, minmax(0, 1fr));"></div>
-
-      <!-- 凡例 -->
-      <div class="flex items-center gap-6 text-xs text-zinc-500">
-        <div class="flex items-center gap-2">
-          <span class="w-3 h-3 inline-block bg-zinc-800"></span>経過した週
-        </div>
-        <div class="flex items-center gap-2">
-          <span class="w-3 h-3 inline-block bg-orange-500"></span>今週
-        </div>
-        <div class="flex items-center gap-2">
-          <span class="w-3 h-3 inline-block bg-orange-500/20"></span>残りの週
-        </div>
+      <div class="border border-zinc-800 rounded px-4 py-3">
+        <p class="text-zinc-500 text-xs mb-1">残りの日数</p>
+        <p class="text-xl text-zinc-200 tabular-nums">612</p>
       </div>
+      <div class="border border-zinc-800 rounded px-4 py-3">
+        <p class="text-zinc-500 text-xs mb-1">残りの長期休暇</p>
+        <p class="text-xl text-zinc-200 tabular-nums">4</p>
+      </div>
+      <div class="border border-zinc-800 rounded px-4 py-3">
+        <p class="text-zinc-500 text-xs mb-1">経過</p>
+        <p class="text-xl text-zinc-200 tabular-nums">58%</p>
+      </div>
+    </div>
+
+    <!-- 週グリッド -->
+    <div id="week-grid" class="grid gap-1 mb-4" style="grid-template-columns: repeat(26, minmax(0, 1fr));"></div>
+
+    <!-- 凡例 -->
+    <div class="flex items-center gap-6 text-xs text-zinc-500">
+      <div class="flex items-center gap-2">
+        <span class="w-3 h-3 inline-block bg-zinc-800"></span>経過した週
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="w-3 h-3 inline-block bg-orange-500"></span>今週
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="w-3 h-3 inline-block bg-orange-500/20"></span>残りの週
+      </div>
+    </div>
 
     </div>
 
@@ -85,6 +110,7 @@
   };
 
   document.getElementById('remaining-days').textContent = progress.remainingDays;
+  document.getElementById('remaining-days-sticky').textContent = progress.remainingDays;
   document.getElementById('remaining-weeks').textContent = progress.remainingWeeks;
   document.getElementById('elapsed-ratio').textContent = Math.round(progress.elapsedRatio * 100) + '%';
 
