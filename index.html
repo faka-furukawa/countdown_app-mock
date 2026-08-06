@@ -47,9 +47,22 @@
         </p>
       </div>
 
-      <!-- スケジュール: 空枠のみ（おまけ） -->
-      <div class="h-96 border border-dashed border-zinc-800 rounded flex items-center justify-center">
-        <span class="text-zinc-700 text-sm">スケジュール（準備中）</span>
+      <!-- スケジュール: 期日つきの予定を追加、近い順+残り日数バッジ表示（保存はされずリロードで初期状態に戻る） -->
+      <div class="h-96 border border-zinc-800 rounded p-4 flex flex-col">
+        <div class="flex items-baseline justify-between mb-3">
+          <span class="text-zinc-400 text-sm">スケジュール</span>
+          <span id="schedule-count" class="text-zinc-600 text-xs">-</span>
+        </div>
+        <ul id="schedule-list" class="flex-1 overflow-y-auto space-y-1 mb-3"></ul>
+        <form id="schedule-form" class="flex flex-col gap-2">
+          <input id="schedule-title-input" type="text" placeholder="予定を追加" autocomplete="off"
+            class="bg-zinc-900 border border-zinc-800 rounded px-2 py-1.5 text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-zinc-600">
+          <div class="flex gap-2">
+            <input id="schedule-date-input" type="date"
+              class="flex-1 min-w-0 [color-scheme:dark] bg-zinc-900 border border-zinc-800 rounded px-2 py-1.5 text-sm text-zinc-200 focus:outline-none focus:border-zinc-600">
+            <button type="submit" class="px-3 py-1.5 text-sm border border-zinc-700 rounded text-zinc-300 hover:border-orange-500 hover:text-orange-500">追加</button>
+          </div>
+        </form>
       </div>
     </div>
 
@@ -133,6 +146,17 @@
 
   function daysBetween(from, to) {
     return Math.round((startOfDay(to) - startOfDay(from)) / MS_PER_DAY);
+  }
+
+  function addDays(date, days) {
+    const d = new Date(date);
+    d.setDate(d.getDate() + days);
+    return d;
+  }
+
+  function parseDateInput(value) {
+    const [y, m, d] = value.split('-').map(Number);
+    return new Date(y, m - 1, d);
   }
 
   function computeProgress(grade, today) {
@@ -254,6 +278,74 @@
   });
 
   renderTasks();
+
+  // ===== スケジュール: 期日つきの予定を追加、近い順+残り日数バッジ（保存なし、リロードで初期状態に戻る） =====
+  const scheduleToday0 = startOfDay(new Date());
+  let schedules = [
+    { id: 's1', title: 'TOEIC受験', date: addDays(scheduleToday0, 14) },
+    { id: 's2', title: '長期インターン選考', date: addDays(scheduleToday0, 45) },
+    { id: 's3', title: 'ゼミ中間発表', date: addDays(scheduleToday0, -3) },
+  ];
+
+  function renderSchedules() {
+    const listEl = document.getElementById('schedule-list');
+    listEl.innerHTML = '';
+    const today0 = startOfDay(new Date());
+    const sorted = [...schedules].sort((a, b) => {
+      const aOverdue = a.date < today0;
+      const bOverdue = b.date < today0;
+      if (aOverdue !== bOverdue) return aOverdue ? 1 : -1; // 期限切れは末尾へ
+      return aOverdue ? b.date - a.date : a.date - b.date; // 期限切れは新しい順、それ以外は近い順
+    });
+
+    sorted.forEach((item) => {
+      const daysUntil = daysBetween(today0, item.date);
+      const li = document.createElement('li');
+      li.className = 'flex items-center justify-between gap-2 text-sm px-2 py-1.5 rounded';
+
+      const titleSpan = document.createElement('span');
+      titleSpan.className = 'truncate';
+      titleSpan.textContent = item.title;
+
+      const badge = document.createElement('span');
+      badge.className = 'text-xs shrink-0 tabular-nums';
+
+      if (daysUntil < 0) {
+        li.classList.add('text-zinc-600');
+        badge.textContent = '期限切れ';
+        badge.classList.add('text-zinc-600');
+      } else if (daysUntil === 0) {
+        li.classList.add('text-zinc-200');
+        badge.textContent = '今日';
+        badge.classList.add('text-orange-500', 'font-bold');
+      } else {
+        li.classList.add('text-zinc-200');
+        badge.textContent = `あと${daysUntil}日`;
+        badge.classList.add('text-orange-500');
+      }
+
+      li.appendChild(titleSpan);
+      li.appendChild(badge);
+      listEl.appendChild(li);
+    });
+
+    document.getElementById('schedule-count').textContent = `${schedules.length}件`;
+  }
+
+  document.getElementById('schedule-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const titleInput = document.getElementById('schedule-title-input');
+    const dateInput = document.getElementById('schedule-date-input');
+    const title = titleInput.value.trim();
+    const dateValue = dateInput.value;
+    if (!title || !dateValue) return;
+    schedules.push({ id: 's' + Date.now(), title, date: parseDateInput(dateValue) });
+    titleInput.value = '';
+    dateInput.value = '';
+    renderSchedules();
+  });
+
+  renderSchedules();
 </script>
 
 </body>
