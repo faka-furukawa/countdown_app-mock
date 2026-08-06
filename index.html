@@ -24,48 +24,14 @@
 
 
     <div class="grid grid-cols-[1fr_34rem_1fr] items-center gap-8">
-      <!-- タスク: 追加・完了トグルが可能（localStorageに保存され、再訪問時も復元される） -->
-      <div class="h-96 border border-zinc-800 rounded p-4 flex flex-col">
-        <div class="flex items-baseline justify-between mb-3">
-          <span class="text-zinc-400 text-sm">タスク</span>
-          <span id="task-count" class="text-zinc-600 text-xs">-</span>
-        </div>
-        <ul id="task-list" class="flex-1 overflow-y-auto space-y-1 mb-3"></ul>
-        <form id="task-form" class="flex gap-2">
-          <input id="task-input" type="text" placeholder="挑戦を追加" autocomplete="off"
-            class="flex-1 min-w-0 bg-zinc-900 border border-zinc-800 rounded px-2 py-1.5 text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-zinc-600">
-          <button type="submit" class="px-3 py-1.5 text-sm border border-zinc-700 rounded text-zinc-300 hover:border-orange-500 hover:text-orange-500">追加</button>
-        </form>
-      </div>
+      <!-- タスク: 中身は partials/task.html が担当。tasks.jsがfetchしてここに注入する -->
+      <div id="task-root" class="h-96 border border-zinc-800 rounded p-4 flex flex-col"></div>
 
-      <!-- 残り日数: 主役（桁数が変わっても幅が動かないよう固定幅カラムの中で中央揃え） -->
-      <div class="flex flex-col items-center px-6">
-        <div class="flex items-baseline gap-4">
-          <span id="remaining-days" class="text-[13rem] leading-none font-bold text-orange-500 tabular-nums">612</span>
-          <span class="text-4xl text-zinc-400">日</span>
-        </div>
-        <p class="mt-6 text-zinc-500 text-xl">
-          残り<span id="remaining-weeks" class="text-zinc-300">87</span>週　／　経過<span id="elapsed-ratio" class="text-zinc-300">58%</span>
-        </p>
-      </div>
+      <!-- 残り日数: 中身は partials/countdown.html が担当。countdown.jsがfetchしてここに注入する -->
+      <div id="countdown-root"></div>
 
-      <!-- スケジュール: 期日つきの予定を追加、近い順+残り日数バッジ表示（localStorageに保存され、再訪問時も復元される） -->
-      <div class="h-96 border border-zinc-800 rounded p-4 flex flex-col">
-        <div class="flex items-baseline justify-between mb-3">
-          <span class="text-zinc-400 text-sm">スケジュール</span>
-          <span id="schedule-count" class="text-zinc-600 text-xs">-</span>
-        </div>
-        <ul id="schedule-list" class="flex-1 overflow-y-auto space-y-1 mb-3"></ul>
-        <form id="schedule-form" class="flex flex-col gap-2">
-          <input id="schedule-title-input" type="text" placeholder="予定を追加" autocomplete="off"
-            class="bg-zinc-900 border border-zinc-800 rounded px-2 py-1.5 text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-zinc-600">
-          <div class="flex gap-2">
-            <input id="schedule-date-input" type="date"
-              class="flex-1 min-w-0 [color-scheme:dark] bg-zinc-900 border border-zinc-800 rounded px-2 py-1.5 text-sm text-zinc-200 focus:outline-none focus:border-zinc-600">
-            <button type="submit" class="px-3 py-1.5 text-sm border border-zinc-700 rounded text-zinc-300 hover:border-orange-500 hover:text-orange-500">追加</button>
-          </div>
-        </form>
-      </div>
+      <!-- スケジュール: 中身は partials/schedule.html が担当。schedule.jsがfetchしてここに注入する -->
+      <div id="schedule-root" class="h-96 border border-zinc-800 rounded p-4 flex flex-col"></div>
     </div>
 
   </div>
