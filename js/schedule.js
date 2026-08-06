@@ -1,5 +1,6 @@
 // ===== スケジュール: 期日つきの予定を追加、近い順+残り日数バッジ（localStorageに保存され、再訪問時も復元される） =====
 // utils.js の読み込みが必要 (startOfDay, daysBetween, parseDateInput, formatDateInput, loadJSON, saveJSON, STORAGE_KEYS)
+// 見た目は partials/schedule.html をfetchして #schedule-root に注入する
 
 const storedSchedules = loadJSON(STORAGE_KEYS.schedules);
 let schedules = storedSchedules
@@ -59,17 +60,23 @@ function renderSchedules() {
   saveJSON(STORAGE_KEYS.schedules, schedules.map((s) => ({ ...s, date: formatDateInput(s.date) })));
 }
 
-document.getElementById('schedule-form').addEventListener('submit', (e) => {
-  e.preventDefault();
-  const titleInput = document.getElementById('schedule-title-input');
-  const dateInput = document.getElementById('schedule-date-input');
-  const title = titleInput.value.trim();
-  const dateValue = dateInput.value;
-  if (!title || !dateValue) return;
-  schedules.push({ id: 's' + Date.now(), title, date: parseDateInput(dateValue) });
-  titleInput.value = '';
-  dateInput.value = '';
-  renderSchedules();
-});
+(async function initSchedule() {
+  const root = document.getElementById('schedule-root');
+  const res = await fetch('partials/schedule.html');
+  root.innerHTML = await res.text();
 
-renderSchedules();
+  document.getElementById('schedule-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const titleInput = document.getElementById('schedule-title-input');
+    const dateInput = document.getElementById('schedule-date-input');
+    const title = titleInput.value.trim();
+    const dateValue = dateInput.value;
+    if (!title || !dateValue) return;
+    schedules.push({ id: 's' + Date.now(), title, date: parseDateInput(dateValue) });
+    titleInput.value = '';
+    dateInput.value = '';
+    renderSchedules();
+  });
+
+  renderSchedules();
+})();

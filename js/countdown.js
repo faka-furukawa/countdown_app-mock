@@ -1,5 +1,6 @@
 // ===== カウントダウン: 学年選択と卒業までの残り日数計算 =====
 // utils.js の読み込みが必要 (startOfDay, daysBetween, loadJSON, saveJSON, STORAGE_KEYS)
+// 中央の「残り日数」表示は partials/countdown.html をfetchして #countdown-root に注入する
 
 const TOTAL_GRADES = 4;
 
@@ -86,13 +87,19 @@ function render(grade) {
   });
 }
 
-document.querySelectorAll('.grade-btn').forEach((btn) => {
-  btn.addEventListener('click', () => {
-    const grade = Number(btn.dataset.grade);
-    saveJSON(STORAGE_KEYS.grade, grade);
-    render(grade);
-  });
-});
+(async function initCountdown() {
+  const root = document.getElementById('countdown-root');
+  const res = await fetch('partials/countdown.html');
+  root.innerHTML = await res.text();
 
-const storedGrade = loadJSON(STORAGE_KEYS.grade);
-render(storedGrade >= 1 && storedGrade <= 4 ? storedGrade : 1);
+  document.querySelectorAll('.grade-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const grade = Number(btn.dataset.grade);
+      saveJSON(STORAGE_KEYS.grade, grade);
+      render(grade);
+    });
+  });
+
+  const storedGrade = loadJSON(STORAGE_KEYS.grade);
+  render(storedGrade >= 1 && storedGrade <= 4 ? storedGrade : 1);
+})();

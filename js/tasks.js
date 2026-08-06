@@ -1,5 +1,6 @@
 // ===== タスク: 追加・完了トグル（localStorageに保存され、再訪問時も復元される） =====
 // utils.js の読み込みが必要 (loadJSON, saveJSON, STORAGE_KEYS)
+// 見た目は partials/task.html をfetchして #task-root に注入する
 
 let tasks = loadJSON(STORAGE_KEYS.tasks) || [
   { id: 'c1', title: 'TOEIC 800点', done: false },
@@ -27,14 +28,20 @@ function renderTasks() {
   saveJSON(STORAGE_KEYS.tasks, tasks);
 }
 
-document.getElementById('task-form').addEventListener('submit', (e) => {
-  e.preventDefault();
-  const input = document.getElementById('task-input');
-  const title = input.value.trim();
-  if (!title) return;
-  tasks.unshift({ id: 'c' + Date.now(), title, done: false });
-  input.value = '';
-  renderTasks();
-});
+(async function initTasks() {
+  const root = document.getElementById('task-root');
+  const res = await fetch('partials/task.html');
+  root.innerHTML = await res.text();
 
-renderTasks();
+  document.getElementById('task-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const input = document.getElementById('task-input');
+    const title = input.value.trim();
+    if (!title) return;
+    tasks.unshift({ id: 'c' + Date.now(), title, done: false });
+    input.value = '';
+    renderTasks();
+  });
+
+  renderTasks();
+})();
