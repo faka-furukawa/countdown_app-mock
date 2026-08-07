@@ -1,32 +1,27 @@
-// ===== スケジュール: 期日つきの予定を追加、近い順+残り日数バッジ（localStorageに保存され、再訪問時も復元される） =====
-// utils.js の読み込みが必要 (startOfDay, daysBetween, parseDateInput, formatDateInput, loadJSON, saveJSON, STORAGE_KEYS)
+// ===== スケジュール: 期日つきの予定を追加、近い順+残り日数バッジ（Supabaseに保存され、同じ匿名アカウントなら再訪問時も復元される） =====
+// utils.js の読み込みが必要 (startOfDay, daysBetween, parseDateInput, supabaseClient, getSupabaseReady)
 // 見た目は partials/schedule.html をfetchして #schedule-root に注入する
 
-const storedSchedules = loadJSON(STORAGE_KEYS.schedules);
-let schedules = storedSchedules
-  ? storedSchedules.map((s) => ({ ...s, date: parseDateInput(s.date) }))
-  : (() => {
-      const scheduleToday0 = startOfDay(new Date());
-      return [
-        { id: 's1', title: 'TOEIC受験', date: addDays(scheduleToday0, 14) },
-        { id: 's2', title: '長期インターン選考', date: addDays(scheduleToday0, 45) },
-        { id: 's3', title: 'ゼミ中間発表', date: addDays(scheduleToday0, -3) },
-      ];
-    })();
+let schedules = []; // 各要素の date はSupabaseから返る 'YYYY-MM-DD' 文字列
+let scheduleGoalId = null;
 
 function renderSchedules() {
   const listEl = document.getElementById('schedule-list');
   listEl.innerHTML = '';
   const today0 = startOfDay(new Date());
+
   const sorted = [...schedules].sort((a, b) => {
-    const aOverdue = a.date < today0;
-    const bOverdue = b.date < today0;
+    const aDate = parseDateInput(a.date);
+    const bDate = parseDateInput(b.date);
+    const aOverdue = aDate < today0;
+    const bOverdue = bDate < today0;
     if (aOverdue !== bOverdue) return aOverdue ? 1 : -1; // 期限切れは末尾へ
-    return aOverdue ? b.date - a.date : a.date - b.date; // 期限切れは新しい順、それ以外は近い順
+    return aOverdue ? bDate - aDate : aDate - bDate; // 期限切れは新しい順、それ以外は近い順
   });
 
   sorted.forEach((item) => {
-    const daysUntil = daysBetween(today0, item.date);
+    const itemDate = parseDateInput(item.date);
+    const daysUntil = daysBetween(today0, itemDate);
     const li = document.createElement('li');
     li.className = 'flex items-center justify-between gap-2 text-sm px-2 py-1.5 rounded';
 
@@ -57,7 +52,6 @@ function renderSchedules() {
   });
 
   document.getElementById('schedule-count').textContent = `${schedules.length}件`;
-  saveJSON(STORAGE_KEYS.schedules, schedules.map((s) => ({ ...s, date: formatDateInput(s.date) })));
 }
 
 (async function initSchedule() {
@@ -65,18 +59,38 @@ function renderSchedules() {
   const res = await fetch('partials/schedule.html');
   root.innerHTML = await res.text();
 
-  document.getElementById('schedule-form').addEventListener('submit', (e) => {
+  const { goalId } = await getSupabaseReady();
+  scheduleGoalId = goalId;
+
+  const { data, error } = await supabaseClient
+    .from('schedules')
+    .select('id, title, date')
+    .eq('goal_id', scheduleGoalId);
+
+  if (!error) {
+    schedules = data;
+    renderSchedules();
+  }
+
+  document.getElementById('schedule-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const titleInput = document.getElementById('schedule-title-input');
     const dateInput = document.getElementById('schedule-date-input');
     const title = titleInput.value.trim();
     const dateValue = dateInput.value;
     if (!title || !dateValue) return;
-    schedules.push({ id: 's' + Date.now(), title, date: parseDateInput(dateValue) });
     titleInput.value = '';
     dateInput.value = '';
-    renderSchedules();
-  });
 
-  renderSchedules();
+    const { data: inserted, error: insertError } = await supabaseClient
+      .from('schedules')
+      .insert({ title, date: dateValue, goal_id: scheduleGoalId })
+      .select('id, title, date')
+      .single();
+
+    if (!insertError) {
+      schedules.push(inserted);
+      renderSchedules();
+    }
+  });
 })();

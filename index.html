@@ -97,6 +97,9 @@
 
   </div>
 
+<!-- Supabaseクライアント。utils.jsより先に読み込む必要がある -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+
 <!-- JSはイシュー単位でファイル分割。utils.jsは他の3つが依存する共通処理なので必ず先に読み込む -->
 <script src="js/utils.js"></script>
 <script src="js/countdown.js"></script>
