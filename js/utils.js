@@ -30,6 +30,14 @@ function formatDateInput(date) {
   return `${y}-${m}-${d}`;
 }
 
+// その週の起点となる直近の土曜日を返す（土日はその週自身の起点になる）
+function getWeekStartSaturday(date) {
+  const d = startOfDay(date);
+  const day = d.getDay(); // 0=日, 6=土
+  const diff = (day - 6 + 7) % 7;
+  return addDays(d, -diff);
+}
+
 // localStorage永続化: 学年選択（端末ごとの表示上の好み）はここに保存する
 const STORAGE_KEYS = {
   grade: 'countdown-mock:grade',

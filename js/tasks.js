@@ -1,6 +1,6 @@
 // ===== タスク: 追加・完了トグル（Supabaseに保存され、同じ匿名アカウントなら再訪問時も復元される） =====
 // utils.js の読み込みが必要 (supabaseClient, getSupabaseReady)
-// 見た目は partials/task.html をfetchして #task-root に注入する
+// 見た目は partials/task.html をfetchして #task-slot-tasks-panel に注入する（タスク枠内のタブの1つ）
 
 let tasks = [];
 let taskGoalId = null;
@@ -34,7 +34,7 @@ async function toggleTask(task) {
 }
 
 (async function initTasks() {
-  const root = document.getElementById('task-root');
+  const root = document.getElementById('task-slot-tasks-panel');
   const res = await fetch('partials/task.html');
   root.innerHTML = await res.text();
 
