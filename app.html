@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Countdown</title>
+<script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-zinc-950 text-zinc-200 font-mono min-h-screen">
+
+  <!-- ===== Hero: タスク(左) / 残り日数(中央・主役) / スケジュール(右) — 最初の1画面はこれだけ ===== -->
+  <div class="min-h-screen flex flex-col justify-center max-w-6xl mx-auto px-10">
+
+    <p class="text-zinc-500 text-sm tracking-[0.3em] uppercase mb-4 text-center">卒業まで</p>
+
+    <!-- 学年セレクタ: 今何年生かを選ぶと期限が再計算される -->
+    <div id="grade-selector" class="flex justify-center gap-2 mb-8">
+      <button type="button" data-grade="1" class="grade-btn px-4 py-1.5 text-sm border rounded border-zinc-800 text-zinc-500">1年</button>
+      <button type="button" data-grade="2" class="grade-btn px-4 py-1.5 text-sm border rounded border-zinc-800 text-zinc-500">2年</button>
+      <button type="button" data-grade="3" class="grade-btn px-4 py-1.5 text-sm border rounded border-zinc-800 text-zinc-500">3年(大学院1年)</button>
+      <button type="button" data-grade="4" class="grade-btn px-4 py-1.5 text-sm border rounded border-zinc-800 text-zinc-500">4年(大学院2年)</button>
+      
+    </div>
+
+
+    <div class="grid grid-cols-[1fr_34rem_1fr] items-center gap-8">
+      <!-- タスク: 中身は partials/task.html が担当。tasks.jsがfetchしてここに注入する -->
+      <div id="task-root" class="h-96 border border-zinc-800 rounded p-4 flex flex-col"></div>
+
+      <!-- 残り日数: 中身は partials/countdown.html が担当。countdown.jsがfetchしてここに注入する -->
+      <div id="countdown-root"></div>
+
+      <!-- スケジュール: 中身は partials/schedule.html が担当。schedule.jsがfetchしてここに注入する -->
+      <div id="schedule-root" class="h-96 border border-zinc-800 rounded p-4 flex flex-col"></div>
+    </div>
+
+  </div>
+
+  <!-- ===== 二次情報: 指標カード + 週グリッド（スクロールしないと見えない・控えめ表示） ===== -->
+  <div class="max-w-6xl mx-auto px-10 pb-14">
+
+    <!-- スクロール追従バー: 縮小版の 残り日数 / タスク / スケジュール -->
+    <div class="sticky top-0 z-10 -mx-10 px-10 py-3 mb-10 bg-zinc-950/95 backdrop-blur-sm border-b border-zinc-800">
+      <div class="grid grid-cols-[1fr_10rem_1fr] items-center gap-4">
+        <div class="h-10 border border-dashed border-zinc-800 rounded flex items-center justify-center">
+          <span class="text-zinc-700 text-xs">タスク</span>
+        </div>
+        <div class="flex items-baseline gap-2 justify-self-center">
+          <span id="remaining-days-sticky" class="text-3xl font-bold text-orange-500 tabular-nums leading-none">612</span>
+          <span class="text-sm text-zinc-400">日</span>
+        </div>
+        <div class="h-10 border border-dashed border-zinc-800 rounded flex items-center justify-center">
+          <span class="text-zinc-700 text-xs">スケジュール</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="opacity-50 hover:opacity-100 focus-within:opacity-100 transition-opacity duration-300">
+
+    <!-- 指標カード 2x2 -->
+    <div class="grid grid-cols-4 gap-3 mb-10 text-sm">
+      <div class="border border-zinc-800 rounded px-4 py-3">
+        <p class="text-zinc-500 text-xs mb-1">残りの週</p>
+        <p id="card-remaining-weeks" class="text-xl text-zinc-200 tabular-nums">-</p>
+      </div>
+      <div class="border border-zinc-800 rounded px-4 py-3">
+        <p class="text-zinc-500 text-xs mb-1">残りの日数</p>
+        <p id="card-remaining-days" class="text-xl text-zinc-200 tabular-nums">-</p>
+      </div>
+      <div class="border border-zinc-800 rounded px-4 py-3">
+        <p class="text-zinc-500 text-xs mb-1">残りの長期休暇</p>
+        <p id="card-remaining-breaks" class="text-xl text-zinc-200 tabular-nums">-</p>
+      </div>
+      <div class="border border-zinc-800 rounded px-4 py-3">
+        <p class="text-zinc-500 text-xs mb-1">経過</p>
+        <p id="card-elapsed-ratio" class="text-xl text-zinc-200 tabular-nums">-</p>
+      </div>
+    </div>
+
+    <!-- 週グリッド -->
+    <div id="week-grid" class="grid gap-1 mb-4" style="grid-template-columns: repeat(26, minmax(0, 1fr));"></div>
+
+    <!-- 凡例 -->
+    <div class="flex items-center gap-6 text-xs text-zinc-500">
+      <div class="flex items-center gap-2">
+        <span class="w-3 h-3 inline-block bg-zinc-800"></span>経過した週
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="w-3 h-3 inline-block bg-orange-500"></span>今週
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="w-3 h-3 inline-block bg-orange-500/20"></span>残りの週
+      </div>
+    </div>
+
+    </div>
+
+  </div>
+
+<!-- Supabaseクライアント。utils.jsより先に読み込む必要がある -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+
+<!-- JSはイシュー単位でファイル分割。utils.jsは他の3つが依存する共通処理なので必ず先に読み込む -->
+<script src="js/utils.js"></script>
+<script src="js/countdown.js"></script>
+<script src="js/tasks.js"></script>
+<script src="js/schedule.js"></script>
+
+</body>
+</html>

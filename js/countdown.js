@@ -11,10 +11,10 @@ function academicYearStart(date) {
   return m >= 4 ? y : y - 1;
 }
 
-function computeProgress(grade, today) {
-  const ay = academicYearStart(today);
-  const entryDate = new Date(ay - (grade - 1), 3, 1); // 現学年度からgrade-1年遡った4/1
-  const graduationDate = new Date(ay + (TOTAL_GRADES - grade) + 1, 2, 31); // 4年目終了年の3/31
+// 引数を「学年(grade)」から「入学年度(entryYear)」に変更
+function computeProgress(entryYear, today) {
+  const entryDate = new Date(entryYear, 3, 1); // 入学年度の4月1日
+  const graduationDate = new Date(entryYear + TOTAL_GRADES, 2, 31); // 4年目の3月31日
 
   const remainingDays = Math.max(0, daysBetween(today, graduationDate));
   const elapsedDaysTotal = Math.max(0, daysBetween(entryDate, today));
@@ -27,9 +27,10 @@ function computeProgress(grade, today) {
 
   // 残りの長期休暇（夏休み・春休み、それぞれ年2回想定）を卒業までの範囲で数える
   let remainingBreaks = 0;
-  for (let i = 0; ay + i <= ay + (TOTAL_GRADES - grade); i++) {
-    const summerBreak = new Date(ay + i, 7, 1);
-    const springBreak = new Date(ay + i + 1, 1, 1);
+  // 入学年度から4年間分をループして判定
+  for (let i = 0; i < TOTAL_GRADES; i++) {
+    const summerBreak = new Date(entryYear + i, 7, 1);      // 8月1日を想定
+    const springBreak = new Date(entryYear + i + 1, 1, 1);  // 翌年の2月1日を想定
     [summerBreak, springBreak].forEach((breakDate) => {
       if (breakDate > startOfDay(today) && breakDate <= graduationDate) {
         remainingBreaks++;
@@ -61,9 +62,10 @@ function renderGrid(progress) {
   }
 }
 
-function render(grade) {
+// 引数を「学年(grade)」から「入学年度(entryYear)」に変更
+function render(entryYear) {
   const today = new Date();
-  const progress = computeProgress(grade, today);
+  const progress = computeProgress(entryYear, today);
   const ratioPct = Math.round(progress.elapsedRatio * 100) + '%';
 
   document.getElementById('remaining-days').textContent = progress.remainingDays;
@@ -78,8 +80,12 @@ function render(grade) {
 
   renderGrid(progress);
 
+  // 現在の学年度から「現在の学年」を計算し、ボタンのアクティブ状態を制御する
+  const currentAy = academicYearStart(today);
+  const currentGrade = currentAy - entryYear + 1;
+
   document.querySelectorAll('.grade-btn').forEach((btn) => {
-    const isActive = Number(btn.dataset.grade) === grade;
+    const isActive = Number(btn.dataset.grade) === currentGrade;
     btn.classList.toggle('border-orange-500', isActive);
     btn.classList.toggle('text-orange-500', isActive);
     btn.classList.toggle('border-zinc-800', !isActive);
@@ -94,12 +100,35 @@ function render(grade) {
 
   document.querySelectorAll('.grade-btn').forEach((btn) => {
     btn.addEventListener('click', () => {
-      const grade = Number(btn.dataset.grade);
-      saveJSON(STORAGE_KEYS.grade, grade);
-      render(grade);
+      const selectedGrade = Number(btn.dataset.grade);
+      const currentAy = academicYearStart(new Date());
+      // クリックされた「学年」から「入学年度」を逆算して保存
+      const entryYear = currentAy - (selectedGrade - 1);
+      
+      // STORAGE_KEYS.entryYear を utils.js 側で新設推奨（ここでは既存キーの互換利用も想定）
+      saveJSON(STORAGE_KEYS.entryYear || STORAGE_KEYS.grade, entryYear);
+      render(entryYear);
     });
   });
 
-  const storedGrade = loadJSON(STORAGE_KEYS.grade);
-  render(storedGrade >= 1 && storedGrade <= 4 ? storedGrade : 1);
+  const today = new Date();
+  const currentAy = academicYearStart(today);
+  
+  // 保存されているデータの取得 (古い「学年(1~4)」が入っている場合の対策付き)
+  let storedData = loadJSON(STORAGE_KEYS.entryYear || STORAGE_KEYS.grade);
+  let entryYear;
+
+  if (storedData >= 1 && storedData <= 4) {
+    // 古い仕様(学年)で保存されていた場合、自動的に入学年度に変換する
+    entryYear = currentAy - (storedData - 1);
+    saveJSON(STORAGE_KEYS.entryYear || STORAGE_KEYS.grade, entryYear);
+  } else if (storedData > 2000) {
+    // 正しく入学年度(例: 2023)で保存されている場合
+    entryYear = storedData;
+  } else {
+    // 初回アクセス時は今の年度を「1年生(入学年度)」として扱う
+    entryYear = currentAy;
+  }
+
+  render(entryYear);
 })();
