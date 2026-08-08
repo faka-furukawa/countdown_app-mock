@@ -45,6 +45,34 @@ function computeProgress(entryYear, today) {
   };
 }
 
+// 秒刻みの表示（残り日数の下のHH:MM:SS）。1日の中の残り時間を24時間ループで表示する
+let tickerIntervalId = null;
+
+function updateRemainingTime(graduationDeadline) {
+  const el = document.getElementById('remaining-time');
+  if (!el) return;
+
+  const diffMs = Math.max(0, graduationDeadline - new Date());
+  const totalSeconds = Math.floor(diffMs / 1000);
+  const hours = Math.floor(totalSeconds / 3600) % 24;
+  const minutes = Math.floor(totalSeconds / 60) % 60;
+  const seconds = totalSeconds % 60;
+
+  const pad = (n) => String(n).padStart(2, '0');
+  el.textContent = `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+}
+
+function startTicker(entryYear) {
+  // 卒業の締切ちょうど（4年目の4/1 0:00）を秒単位の基準にする
+  const graduationDeadline = new Date(entryYear + TOTAL_GRADES, 3, 1);
+
+  if (tickerIntervalId) {
+    clearInterval(tickerIntervalId);
+  }
+  updateRemainingTime(graduationDeadline);
+  tickerIntervalId = setInterval(() => updateRemainingTime(graduationDeadline), 1000);
+}
+
 function renderGrid(progress) {
   const gridEl = document.getElementById('week-grid');
   gridEl.innerHTML = '';
@@ -79,6 +107,7 @@ function render(entryYear) {
   document.getElementById('card-elapsed-ratio').textContent = ratioPct;
 
   renderGrid(progress);
+  startTicker(entryYear);
 
   // 現在の学年度から「現在の学年」を計算し、ボタンのアクティブ状態を制御する
   const currentAy = academicYearStart(today);
