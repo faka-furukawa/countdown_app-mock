@@ -38,13 +38,6 @@ function getWeekStartSaturday(date) {
   return addDays(d, -diff);
 }
 
-// innerHTMLに差し込む前にユーザー入力をエスケープする（XSS対策）
-function escapeHtml(str) {
-  const div = document.createElement('div');
-  div.textContent = str;
-  return div.innerHTML;
-}
-
 // localStorage永続化: 学年選択（端末ごとの表示上の好み）はここに保存する
 const STORAGE_KEYS = {
   grade: 'countdown-mock:grade',

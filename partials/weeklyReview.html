@@ -1,3 +1,29 @@
 <div id="weekly-review-content" class="flex-1 min-h-0 overflow-y-auto text-sm space-y-3">
-  <p class="text-zinc-600 text-xs">読み込み中...</p>
+
+  <div id="weekly-reflection-block" class="border border-zinc-800 rounded p-3 hidden">
+    <p class="text-zinc-500 text-xs mb-1">先週の振り返り</p>
+    <p id="weekly-reflection-goal-text" class="text-zinc-200 mb-2"></p>
+    <div class="flex gap-2 mb-2">
+      <button type="button" data-achieved="true" class="reflection-btn flex-1 px-2 py-1 text-xs border border-zinc-700 rounded hover:border-orange-500 hover:text-orange-500">達成できた</button>
+      <button type="button" data-achieved="false" class="reflection-btn flex-1 px-2 py-1 text-xs border border-zinc-700 rounded hover:border-orange-500 hover:text-orange-500">できなかった</button>
+    </div>
+    <textarea id="reflection-text" rows="2" placeholder="振り返りメモ（任意）"
+      class="w-full bg-zinc-900 border border-zinc-800 rounded px-2 py-1.5 text-xs text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-zinc-600"></textarea>
+  </div>
+
+  <div id="weekly-goal-display-block" class="border border-zinc-800 rounded p-3 hidden">
+    <p class="text-zinc-500 text-xs mb-1">今週の目標</p>
+    <p id="weekly-goal-display-text" class="text-zinc-200 mb-2"></p>
+    <button type="button" id="edit-current-goal" class="text-xs text-zinc-600 hover:text-orange-500">変更する</button>
+  </div>
+
+  <div id="weekly-goal-form-block" class="border border-zinc-800 rounded p-3 hidden">
+    <p class="text-zinc-500 text-xs mb-2">今週の目標</p>
+    <form id="weekly-goal-form" class="flex flex-col gap-2">
+      <input id="weekly-goal-input" type="text" placeholder="今週の目標を入力" autocomplete="off"
+        class="bg-zinc-900 border border-zinc-800 rounded px-2 py-1.5 text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-zinc-600">
+      <button type="submit" class="px-3 py-1.5 text-sm border border-zinc-700 rounded text-zinc-300 hover:border-orange-500 hover:text-orange-500">設定</button>
+    </form>
+  </div>
+
 </div>
