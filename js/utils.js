@@ -76,8 +76,9 @@ function getSupabaseReady() {
         .maybeSingle();
 
       if (!goal) {
-        // computeProgress/formatDateInputはcountdown.js側で定義済み（読み込み順が先のため参照可能）
-        const fallbackEndDate = computeProgress(1, new Date()).graduationDate;
+        // computeProgress/academicYearStart/formatDateInputはcountdown.js側で定義済み（読み込み順が先のため参照可能）
+        // computeProgressの第1引数は「学年」ではなく「入学年度」。今の学年度に入学したもの(1年生)として初期値を作る
+        const fallbackEndDate = computeProgress(academicYearStart(new Date()), new Date()).graduationDate;
         const { data: inserted, error: insertError } = await supabaseClient
           .from('goals')
           .insert({ title: '卒業', end_date: formatDateInput(fallbackEndDate) })
