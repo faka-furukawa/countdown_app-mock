@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Loading...</title>
+  <style>
+    /* 全体リセットと中央寄せ配置 */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background-color: #000000; /* ダーク背景で発色をよくしています */
+      font-family: sans-serif;
+    }
+
+    /* ローディングコンテナ */
+    .loader-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      padding: 0 20px; /* スマホ画面の端に文字がくっつかないよう余白を追加 */
+      text-align: center; /* 挨拶メッセージを中央寄せ */
+    }
+
+    /* ぐるぐる回るスピナー */
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 5px solid rgba(249, 115, 22, 0.2); /* 薄いオレンジの背景線 */
+      border-top: 5px solid #f97316;              /* メインのオレンジ線 */
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    /* 回転アニメーション定義 */
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* 指定色 #f97316 を適用したテキスト */
+    .loading-text {
+      color: #f97316;
+      font-size: 1.2rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+    }
+
+    /* 挨拶メッセージ用のスタイルを追加 */
+    .greeting-text {
+      color: #f97316;
+      font-size: 1.5rem;
+      font-weight: bold;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="loader-container">
+    <!-- 修正点①: h1タグをbody内のこちら（適切な場所）へ移動し、クラスを適用 -->
+    <h1 id="greeting" class="greeting-text"></h1>
+    <div class="spinner"></div>
+    <p class="loading-text">Loading...</p>
+  </div>
+
+  <script>
+    // ページ読み込み完了時の処理
+    window.addEventListener('load', () => {
+      // 修正点②: 読み込み完了時にh1の中身を関数から書き換える
+      const greetingElement = document.getElementById("greeting");
+      greetingElement.textContent = getGreetingMessage();
+
+      // 一定時間（3秒）後に index.html へリダイレクト
+      setTimeout(() => {
+        window.location.href = 'index.html';
+      }, 3000);
+    });
+
+    /**
+     * 現在の時刻（時）に応じて適切な挨拶メッセージを返します。
+     */
+    function getGreetingMessage() {
+      const currentHour = new Date().getHours();
+      if (currentHour >= 5 && currentHour < 12) {
+        return "おはようございます。この時間にきちんと起きているあなたは偉いです！";
+      } 
+      else if (currentHour >= 12 && currentHour < 18) {
+        return "こんにちは。お元気ですか？";
+      } 
+      else {
+        return "こんばんは。お疲れ様です。";
+      }
+    }
+  </script>
+
+</body>
+</html>
