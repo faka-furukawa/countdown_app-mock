@@ -24,8 +24,15 @@
 
 
     <div class="grid grid-cols-1 md:grid-cols-[1fr_34rem_1fr] items-center gap-8">
-      <!-- タスク: 中身は partials/task.html が担当。tasks.jsがfetchしてここに注入する -->
-      <div id="task-root" class="h-96 border border-zinc-800 rounded p-4 flex flex-col"></div>
+      <!-- タスク枠: タブで「タスク」「週次目標」を切り替え可能。中身はそれぞれtasks.js/weeklyReview.jsが担当 -->
+      <div id="task-root" class="h-96 border border-zinc-800 rounded p-4 flex flex-col">
+        <div class="flex gap-2 mb-3 shrink-0">
+          <button type="button" id="task-slot-tab-tasks" class="task-slot-tab px-2 py-1 text-xs border rounded">タスク</button>
+          <button type="button" id="task-slot-tab-weekly" class="task-slot-tab px-2 py-1 text-xs border rounded">週次目標</button>
+        </div>
+        <div id="task-slot-tasks-panel" class="flex-1 min-h-0 flex flex-col"></div>
+        <div id="task-slot-weekly-panel" class="flex-1 min-h-0 flex flex-col hidden"></div>
+      </div>
 
       <!-- 残り日数: 中身は partials/countdown.html が担当。countdown.jsがfetchしてここに注入する -->
       <div id="countdown-root"></div>
@@ -105,6 +112,8 @@
 <script src="js/countdown.js"></script>
 <script src="js/tasks.js"></script>
 <script src="js/schedule.js"></script>
+<script src="js/weeklyReview.js"></script>
+<script src="js/taskSlotSwitcher.js"></script>
 
 </body>
 </html>
