@@ -9,7 +9,7 @@
 <body class="bg-zinc-950 text-zinc-200 font-mono min-h-screen">
 
   <!-- ===== Hero: タスク(左) / 残り日数(中央・主役) / スケジュール(右) — 最初の1画面はこれだけ ===== -->
-  <div class="min-h-screen flex flex-col justify-center max-w-6xl mx-auto px-10">
+  <div class="min-h-screen flex flex-col justify-center max-w-6xl mx-auto px-4 md:px-10">
 
     <p class="text-zinc-500 text-sm tracking-[0.3em] uppercase mb-4 text-center">卒業まで</p>
 
@@ -23,7 +23,7 @@
     </div>
 
 
-    <div class="grid grid-cols-[1fr_34rem_1fr] items-center gap-8">
+    <div class="grid grid-cols-1 md:grid-cols-[1fr_34rem_1fr] items-center gap-8">
       <!-- タスク: 中身は partials/task.html が担当。tasks.jsがfetchしてここに注入する -->
       <div id="task-root" class="h-96 border border-zinc-800 rounded p-4 flex flex-col"></div>
 
@@ -37,7 +37,7 @@
   </div>
 
   <!-- ===== 二次情報: 指標カード + 週グリッド（スクロールしないと見えない・控えめ表示） ===== -->
-  <div class="max-w-6xl mx-auto px-10 pb-14">
+  <div class="max-w-6xl mx-auto px-4 md:px-10 pb-14">
 
     <!-- スクロール追従バー: 縮小版の 残り日数 / タスク / スケジュール -->
     <div class="sticky top-0 z-10 -mx-10 px-10 py-3 mb-10 bg-zinc-950/95 backdrop-blur-sm border-b border-zinc-800">
@@ -58,7 +58,7 @@
     <div class="opacity-50 hover:opacity-100 focus-within:opacity-100 transition-opacity duration-300">
 
     <!-- 指標カード 2x2 -->
-    <div class="grid grid-cols-4 gap-3 mb-10 text-sm">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-10 text-sm">
       <div class="border border-zinc-800 rounded px-4 py-3">
         <p class="text-zinc-500 text-xs mb-1">残りの週</p>
         <p id="card-remaining-weeks" class="text-xl text-zinc-200 tabular-nums">-</p>
